@@ -54,7 +54,7 @@ A rollback should use a known-good Worker version and compatible assets. Review 
 
 Enable private vulnerability reporting and the secret-scanning/push-protection features available to the repository. Protect `main` with the CI checks (`Check (Node 22)`, `Check (Node 24)` and `Dependencies and secrets`) and disallow force pushes. Review any paid feature requirements before enabling them.
 
-Once the repository is public, remove `hidden` from `#repositoryCredit` in `public/index.html`, rebuild and deploy. This reveals the GitHub source link after OpenFreeMap in the editor credits; print exports keep their existing attributions. Check that the repository opens without signing in before enabling the link.
+The editor credits include a GitHub source link after OpenFreeMap. Print exports keep their existing attributions. For a fork, update the link in `#repositoryCredit` in `public/index.html` and check that the destination repository opens without signing in.
 
 Local working notes are ignored and untracked in the current tree. Earlier commits can still contain files that were once tracked. Review history as well as the current tree; `.gitignore` is not a history eraser. The secret scan covers all fetched refs, but cannot detect every possible sensitive value.
 

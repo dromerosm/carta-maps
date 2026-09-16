@@ -1,0 +1,10 @@
+# Keep upstream bundles and licence notices byte-for-byte, including whitespace.
+public/city-roads/pdf-export.mjs -whitespace linguist-generated=true
+public/city-roads/vector-tile.mjs -whitespace linguist-generated=true
+public/city-roads/THIRD-PARTY-LICENSES.txt -whitespace
+public/city-roads/fonts/*.txt -whitespace
+public/city-roads/print-text.mjs -whitespace linguist-generated=true
+public/vendor/leaflet.js -whitespace linguist-generated=true
+public/vendor/leaflet.css -whitespace
+public/vendor/Leaflet-LICENSE.txt -whitespace
+third-party/Apache-2.0.txt -whitespace

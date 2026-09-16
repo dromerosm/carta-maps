@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible problem in the editor or export.
+body:
+  - type: markdown
+    attributes:
+      value: For security issues, follow SECURITY.md. Do not post credentials or personal data.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: What happened?
+      description: Include the steps, expected result, city, frame, enabled layers and export format where relevant.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, operating system and Carta commit
+      placeholder: Firefox, macOS, commit or deployment date
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshot or error message
+      description: Remove personal information before attaching files or logs.

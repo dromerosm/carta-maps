@@ -1,0 +1,51 @@
+{
+  "name": "carta-maps",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "City prints from OpenStreetMap and OpenFreeMap with low-resolution PDF and SVG previews and PNG export.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "npm run build:vector && npm run build:pdf && npm run build:vendor && npm run build:text && npm run build:notices && npm run build:app-version && npm run build:seo",
+    "build:app-version": "node scripts/version-app.mjs",
+    "build:vector": "esbuild src/vector-tile-entry.mjs --bundle --format=esm --minify --outfile=public/city-roads/vector-tile.mjs",
+    "build:pdf": "esbuild src/pdf-export-entry.mjs --bundle --format=esm --minify --external:html2canvas --external:canvg --external:dompurify --outfile=public/city-roads/pdf-export.mjs",
+    "types": "wrangler types",
+    "typecheck": "wrangler types --check && tsc --noEmit",
+    "deploy:check": "wrangler deploy --dry-run",
+    "deploy:prepare": "node scripts/prepare-deployment.mjs",
+    "deploy": "npm run check && npm run deploy:prepare && wrangler deploy --config dist/deploy/wrangler.jsonc",
+    "build:vendor": "node scripts/vendor.mjs",
+    "build:text": "esbuild src/print-text-entry.mjs --bundle --format=esm --minify --outfile=public/city-roads/print-text.mjs",
+    "build:notices": "node scripts/notices.mjs",
+    "check": "npm run build && npm run types && npm test && npm run typecheck && npm run deploy:check",
+    "build:seo": "node scripts/seo.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260915.1",
+    "@mapbox/vector-tile": "3.0.0",
+    "@types/node": "26.5.1",
+    "bidi-js": "1.1.0",
+    "esbuild": "0.25.12",
+    "fontkit": "2.0.4",
+    "jspdf": "4.2.1",
+    "leaflet": "1.9.4",
+    "miniflare": "5.20260911.1-alpha",
+    "pbf": "5.1.2",
+    "polygon-clipping": "0.15.7",
+    "typescript": "7.0.2",
+    "wrangler": "4.131.2"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dromerosm/carta-maps.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dromerosm/carta-maps/issues"
+  }
+}

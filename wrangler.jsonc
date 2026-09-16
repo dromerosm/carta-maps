@@ -1,0 +1,84 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "carta-maps",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "carta.example.com",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "vars": {
+    "BASE_PATH": "",
+    "NOMINATIM_ENDPOINT": "https://nominatim.openstreetmap.org/search",
+    "CONTACT_URL": "https://carta.example.com/"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SEARCH_CACHE",
+        "class_name": "SearchCache"
+      },
+      {
+        "name": "SEARCH_GATE",
+        "class_name": "SearchGate"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "SearchCache",
+        "SearchGate"
+      ]
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "SEARCH_LIMIT",
+      "namespace_id": "9431827",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
+      "name": "TILE_LIMIT",
+      "namespace_id": "9431828",
+      "simple": {
+        "limit": 1200,
+        "period": 60
+      }
+    },
+    {
+      "name": "TILE_MISS_LIMIT",
+      "namespace_id": "9431829",
+      "simple": {
+        "limit": 480,
+        "period": 60
+      }
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": false
+    },
+    "traces": {
+      "enabled": false
+    }
+  }
+}

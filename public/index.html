@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- SEO:start -->
+    <title>Carta · Create City Map Prints | Diego Romero</title>
+    <link rel="canonical" href="https://carta.example.com/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta name="description" content="Create a city map print with OpenStreetMap data. Style streets, rivers, railways and forests, choose a frame, and export PDF, SVG or PNG for free.">
+    <meta name="author" content="Diego Romero">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="application-name" content="Carta">
+    <meta name="theme-color" content="#f5f4ec">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Carta · Create City Map Prints | Diego Romero">
+    <meta name="twitter:description" content="Create a city map print with OpenStreetMap data. Style streets, rivers, railways and forests, choose a frame, and export PDF, SVG or PNG for free.">
+    <meta name="twitter:image" content="https://carta.example.com/og-image.jpg">
+    <meta name="twitter:image:alt" content="Carta: Your city, on paper. A framed street map of Zaragoza with PDF and SVG downloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Carta">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://carta.example.com/">
+    <meta property="og:title" content="Carta · Create City Map Prints | Diego Romero">
+    <meta property="og:description" content="Create a city map print with OpenStreetMap data. Style streets, rivers, railways and forests, choose a frame, and export PDF, SVG or PNG for free.">
+    <meta property="og:image" content="https://carta.example.com/og-image.jpg">
+    <meta property="og:image:secure_url" content="https://carta.example.com/og-image.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Carta: Your city, on paper. A framed street map of Zaragoza with PDF and SVG downloads.">
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Carta","applicationCategory":"DesignApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript and a modern web browser.","isAccessibleForFree":true,"featureList":["City search","Independent map layer styles","Low-resolution PDF and SVG previews (1024 px)","PNG export for social sharing","Optional PDF crop marks"],"@id":"https://carta.example.com/#app","url":"https://carta.example.com/","description":"Create a city map print with OpenStreetMap data. Style streets, rivers, railways and forests, choose a frame, and export PDF, SVG or PNG for free.","inLanguage":"en","image":"https://carta.example.com/og-image.jpg","author":{"@type":"Person","name":"Diego Romero","url":"https://example.com/"}},{"@type":"WebSite","@id":"https://carta.example.com/#website","name":"Carta","url":"https://carta.example.com/","inLanguage":"en","publisher":{"@type":"Person","name":"Diego Romero","url":"https://example.com/"}}]}</script>
+    <!-- SEO:end -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./vendor/leaflet.css">
+    <style id="artworkFonts">
+      @font-face { font-family: "DM Sans"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("./city-roads/fonts/dm-sans-latin.woff2") format("woff2"); }
+      @font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 500; font-display: swap; src: url("./city-roads/fonts/barlow-condensed-latin.woff2") format("woff2"); }
+    </style>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #20251c;
+        --muted: #5a6253;
+        --faint: #858c7b;
+        --paper: #e8eadf;
+        --frame-paper: #f5f4ec;
+        --art-text: #20251c;
+        --detail-monument-color: #d02020;
+        --panel: #f5f4ec;
+        --panel-solid: #f5f4ec;
+        --line: #20251c26;
+        --line-strong: #20251c4d;
+        --accent: #556500;
+        --accent-soft: #5565000d;
+        --positive: #556500;
+        --topbar-height: 76px;
+        --sidebar-width: 380px;
+        --font-body: "DM Sans", Arial, sans-serif;
+        --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .panel-toggle {
+        display: none;
+      }
+
+      html,
+      body,
+      #map {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        overflow: hidden;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: var(--font-body);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body.theme-dark {
+        color-scheme: dark;
+        --ink: #efeee6;
+        --muted: #aeafa5;
+        --faint: #808579;
+        --paper: #191d16;
+        --panel: #10120f;
+        --panel-solid: #10120f;
+        --line: #ffffff28;
+        --line-strong: #ffffff4d;
+        --accent: #e6f269;
+        --accent-soft: #e6f2690d;
+        --positive: #e6f269;
+      }
+
+      #map {
+        background: transparent;
+      }
+
+      .webgpu-road-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 399;
+        clip-path: inset(
+          var(--render-clip-top, 0)
+          var(--render-clip-right, 0)
+          var(--render-clip-bottom, 0)
+          var(--render-clip-left, 0)
+        );
+        pointer-events: none;
+      }
+
+      .leaflet-overlay-pane canvas {
+        clip-path: inset(
+          var(--render-clip-top, 0)
+          var(--render-clip-right, 0)
+          var(--render-clip-bottom, 0)
+          var(--render-clip-left, 0)
+        );
+      }
+
+      #map .leaflet-map-pane {
+        z-index: 401;
+      }
+
+      .frame-paper {
+        position: absolute;
+        z-index: 398;
+        left: var(--frame-left, 420px);
+        top: var(--frame-top, 42px);
+        width: var(--frame-width, 420px);
+        height: var(--frame-height, 420px);
+        background: var(--frame-paper);
+        border: 1px solid rgba(32, 35, 33, 0.18);
+        box-shadow:
+          0 18px 34px rgba(32, 35, 33, 0.18),
+          0 1px 0 rgba(255, 255, 255, 0.8) inset;
+        pointer-events: none;
+      }
+
+      .app-topbar {
+        position: fixed;
+        z-index: 760;
+        inset: 0 0 auto;
+        height: var(--topbar-height);
+        display: grid;
+        grid-template-columns: var(--sidebar-width) 1fr;
+        align-items: stretch;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel-solid);
+        backdrop-filter: blur(14px);
+      }
+
+      .brand {
+        display: grid;
+        grid-template-columns: 65px 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 0 18px;
+        border-right: 1px solid var(--line);
+      }
+
+      .brand-mark { color: var(--ink); text-decoration: none; font-size: 38px; font-weight: 700; line-height: 1; letter-spacing: -3px; }
+      .brand-mark span { color: var(--accent); font-size: 25px; font-weight: 400; vertical-align: top; letter-spacing: 0; }
+      .brand-title { display: block; font-size: 16px; font-weight: 500; letter-spacing: -.5px; }
+      .brand-subtitle { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; letter-spacing: .09em; text-transform: uppercase; }
+
+      .topbar-status {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        padding: 0 18px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--positive);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      .status:has([data-state="error"]) .status-dot { background: #bd4940; box-shadow: none; }
+      .status:has([data-state="loading"]) .status-dot { background: #bd893c; box-shadow: none; }
+      body.theme-dark .frame-button.active { color: var(--accent); }
+
+      .icon-button {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        border-radius: 50%;
+        padding: 0;
+        color: var(--ink);
+        font-size: 18px;
+      }
+
+      body.theme-dark .icon-button {
+        color: var(--ink);
+      }
+
+      input, select, button { font: inherit; }
+      button, select, input[type="search"] {
+        min-height: 42px; min-width: 0; border: 1px solid var(--line-strong);
+        border-radius: 4px; background: var(--panel-solid); color: var(--ink);
+      }
+      button { cursor: pointer; padding: 8px 12px; }
+      button:hover { background: var(--accent-soft); border-color: var(--accent); }
+      button:disabled { opacity: .45; cursor: not-allowed; }
+      button.primary { background: var(--accent); border-color: var(--accent); color: var(--panel-solid); }
+      :is(a, button, input, select, summary):focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+      input[type="search"], select { width: 100%; padding: 8px 12px; }
+      input[type="search"]::placeholder { color: var(--muted); }
+      .panel {
+        position: fixed; z-index: 700; top: var(--topbar-height); bottom: 0; left: 0;
+        width: var(--sidebar-width); display: flex; flex-direction: column;
+        border-right: 1px solid var(--line); background: var(--panel-solid);
+        color: var(--ink); font-size: 14px; line-height: 1.45;
+        box-shadow: none;
+      }
+      .editor-heading { padding: 22px 24px 18px; flex-shrink: 0; }
+      .editor-eyebrow { color: var(--muted); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+      .editor-heading h1 { font: 500 38px/1.05 var(--font-display); letter-spacing: -.02em; margin: 6px 0; overflow-wrap: anywhere; }
+      .editor-location { color: var(--muted); font-size: 12px; }
+      .tool-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 24px 16px; padding: 0; background: transparent; border-bottom: 1px solid var(--line); border-radius: 0; flex-shrink: 0; }
+      .tool-tab { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--muted); font-weight: 600; min-height: 40px; }
+      .tool-tab[aria-selected="true"] { color: var(--accent); background: transparent; border-bottom-color: var(--accent); box-shadow: none; }
+      .tool-scroll { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; padding: 0 24px 24px; }
+      .tool-content { outline: 0; }
+      .tool-section { padding: 18px 0; border-top: 1px solid var(--line); display: grid; gap: 14px; }
+      .tool-section:first-child { padding-top: 4px; border-top: 0; }
+      .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .section-heading h2 { margin: 0; font-size: 15px; font-weight: 500; }
+      .section-heading small { color: var(--muted); font-size: 12px; }
+      .text-button { min-height: 32px; padding: 4px 0; border: 0; background: transparent; font-size: 12px; color: var(--accent); }
+      .text-button:hover { background: transparent; text-decoration: underline; }
+      .field-label { font-size: 14px; font-weight: 550; }
+      .field-help { color: var(--muted); font-size: 12px; margin: 0; line-height: 1.5; }
+      .search-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+      .search-row button { background: var(--accent); border-color: var(--accent); color: var(--panel-solid); }
+      .badge { font-size: 12px; color: var(--muted); }
+      .badge { white-space: nowrap; }
+      .osm-result-list { display: grid; gap: 7px; }
+      .osm-result-list.hidden { display: none; }
+      .osm-result-button { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; text-align: left; }
+      .osm-result-button > span:first-child { display: grid; gap: 3px; }
+      .osm-result-main { font-weight: 600; }
+      .osm-result-sub { color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .frame-control { display: grid; gap: 12px; }
+      .frame-options { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; }
+      .frame-button { display: grid; justify-items: center; align-content: center; gap: 9px; padding: 10px 2px; min-height: 78px; font-size: 12px; }
+      .frame-mini { display: block; width: 25px; aspect-ratio: var(--ratio); max-height: 29px; border: 1.5px solid currentColor; border-radius: 2px; }
+      .frame-button.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+      .control-line { display: grid; grid-template-columns: 32px minmax(0,1fr) 32px; align-items: center; gap: 10px; }
+      .control-heading { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .range-value { font-size: 12px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 5px; font-variant-numeric: tabular-nums; color: var(--ink); }
+      input[type="range"] { width: 100%; height: 32px; margin: 0; accent-color: var(--accent); }
+      .range-sign { min-height: 32px; padding: 0; font-size: 18px; }
+      .frame-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .frame-actions button { font-size: 14px; }
+      .detail-toggle { display: flex; align-items: center; gap: 10px; min-height: 40px; cursor: pointer; color: var(--ink); font-size: 14px; }
+      .detail-toggle input { width: 17px; height: 17px; margin: 0; flex-shrink: 0; accent-color: var(--accent); }
+      .preset-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+      .style-preset { padding: 10px; text-align: left; display: grid; gap: 8px; }
+      .style-preset[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: none; }
+      .palette-preview { display: flex; height: 28px; overflow: hidden; border-radius: 4px; border: 1px solid var(--line); }
+      .palette-preview i { flex: 1; background: var(--swatch); }
+      .palette-preview i:first-child { flex: 3; }
+      .color-row { display: grid; gap: 10px; }
+      .color-control { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .color-control > span { color: var(--ink); }
+      input[type="color"] { width: 42px; height: 38px; padding: 3px; border: 1px solid var(--line-strong); border-radius: 4px; background: transparent; cursor: pointer; }
+      input[type="color"]:disabled { opacity: .3; cursor: not-allowed; }
+      .layer-list { display: grid; gap: 8px; }
+      .layer-row { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+      .layer-row:has(.layer-edit[aria-expanded="true"]) { border-color: var(--accent); }
+      .layer-header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; padding-right: 10px; }
+      .layer-edit { min-width: 0; min-height: 62px; display: flex; align-items: center; gap: 10px; padding: 10px; border: 0; border-radius: 0; text-align: left; background: transparent; }
+      .layer-edit[aria-expanded="true"] { background: var(--accent-soft); }
+      .layer-title { min-width: 0; display: grid; gap: 3px; }
+      .layer-title strong { font-size: 14px; font-weight: 600; }
+      .layer-title small { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+      .layer-sample { width: 34px; height: 26px; flex-shrink: 0; background: var(--frame-paper); border-radius: 3px; }
+      .layer-chevron { margin-left: auto; color: var(--muted); }
+      .layer-edit[aria-expanded="true"] .layer-chevron { transform: rotate(180deg); }
+      .layer-base { font-size: 11px; color: var(--muted); padding: 5px; }
+      .layer-visibility { display: grid; justify-items: center; gap: 3px; min-width: 44px; min-height: 44px; align-content: center; cursor: pointer; font-size: 10px; }
+      .layer-visibility input { appearance: none; width: 30px; height: 18px; margin: 0; border-radius: 20px; background: var(--line-strong); position: relative; cursor: pointer; }
+      .layer-visibility input::after { content: ""; position: absolute; width: 12px; height: 12px; left: 3px; top: 3px; border-radius: 50%; background: white; transition: transform .15s ease; }
+      .layer-visibility input:checked { background: var(--accent); }
+      .layer-visibility input:checked::after { transform: translateX(12px); }
+      .layer-controls { min-width: 0; margin: 0; padding: 8px 12px 12px; border: 0; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+      .layer-controls[hidden] { display: none; }
+      .layer-edit-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+      .layer-color { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+      .layer-color code { margin-left: auto; font-size: 11px; color: var(--muted); }
+      .layer-color input { height: 32px; }
+      .layer-controls .control-line { gap: 4px 8px; }
+      .layer-controls .control-heading { font-size: 12px; }
+      .layer-controls .field-help { font-size: 11px; }
+      .layer-controls .field-help:empty { display: none; }
+      .layer-data-note { color: var(--muted); font-size: 10px; }
+      .panel:has(#tabLayers[aria-selected="true"]) .editor-heading { padding: 12px 24px; }
+      .panel:has(#tabLayers[aria-selected="true"]) .editor-heading h1 { font-size: 28px; margin: 4px 0; }
+      .panel:has(#tabLayers[aria-selected="true"]) .editor-eyebrow { display: none; }
+      @media (max-height: 800px) {
+        .panel:has(#tabLayers[aria-selected="true"]) .export-dock { gap: 6px; padding-top: 10px; padding-bottom: 10px; }
+        .panel:has(#tabLayers[aria-selected="true"]) .privacy-controls button { min-height: 28px; }
+      }
+      .data-source-toggle { display: flex; justify-content: space-between; align-items: center; }
+      .source-pills { display: flex; }
+      .source-pill { display: none; font-size: 12px; color: var(--accent); }
+      .source-pill.active { display: inline; }
+      .external-load-control { display: grid; gap: 12px; padding: 14px; background: transparent; border: 1px solid var(--line); border-radius: 4px; }
+      .external-load-control label { display: grid; gap: 6px; }
+      .advanced-data { border: 1px solid var(--line); border-radius: 4px; padding: 12px; }
+      .advanced-data summary { cursor: pointer; color: var(--muted); }
+      .advanced-data[open] summary { margin-bottom: 12px; }
+      .advanced-data label { margin-bottom: 12px; }
+      .advanced-data button { width: 100%; }
+      .cache-card { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+      .cache-pill { white-space: nowrap; }
+      .meta { margin-top: 14px; display: grid; gap: 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .print-controls { display: grid; grid-template-columns: 1fr 100px; align-items: center; gap: 6px 10px; font-size: 11px; }
+      .print-controls input { width: 100%; min-width: 0; color: var(--ink); background: var(--panel-solid); border: 1px solid var(--line); border-radius: 4px; padding: 6px; font: inherit; }
+      .print-controls #printTitle { grid-column: 1 / -1; }
+      .print-controls #printSizeHint { grid-column: 1 / -1; color: var(--muted); }
+      .privacy-controls { align-items: center; display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 10px; }
+      .privacy-controls a, .privacy-controls button { color: var(--muted); background: none; border: 0; padding: 0; text-decoration: underline; font: inherit; cursor: pointer; }
+      .export-dock { flex-shrink: 0; padding: 16px 24px max(18px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel-solid); box-shadow: none; display: grid; gap: 9px; }
+      .export-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .export-heading strong { font-size: 14px; }
+      .export-heading span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .export-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+      .export-button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font-size: 14px; font-weight: 600; }
+      .export-note:empty { display: none; }
+      .export-note { color: var(--muted); font-size: 12px; margin: 0; }
+      body.theme-dark button.primary,
+      body.theme-dark .search-row button { background: var(--accent); color: var(--panel-solid); }
+      @media (prefers-reduced-motion: reduce) { .panel, .layer-row input::after { transition: none !important; } }
+
+      .city-label {
+        border: 0;
+        background: transparent;
+        color: rgba(26, 26, 26, 0.62);
+        font: 500 12px/1 var(--font-display);
+        white-space: nowrap;
+      }
+
+      .city-credit {
+        position: absolute;
+        right: 14px;
+        bottom: 12px;
+        z-index: 700;
+        display: grid;
+        gap: 6px;
+        justify-items: end;
+        color: var(--art-text);
+        font: 8px/1.35 var(--font-body);
+        text-align: right;
+        text-shadow:
+          -1.5px -1.5px 0 var(--frame-paper),
+          0 -1.5px 0 var(--frame-paper),
+          1.5px -1.5px 0 var(--frame-paper),
+          -1.5px 0 0 var(--frame-paper),
+          1.5px 0 0 var(--frame-paper),
+          -1.5px 1.5px 0 var(--frame-paper),
+          0 1.5px 0 var(--frame-paper),
+          1.5px 1.5px 0 var(--frame-paper),
+          0 0 4px var(--frame-paper);
+        pointer-events: auto;
+      }
+
+      .city-credit strong {
+        color: var(--art-text);
+        font: 500 28px/1 var(--font-display); letter-spacing: -.02em;
+        -webkit-text-stroke: 0.35px var(--frame-paper);
+        paint-order: stroke fill;
+        text-shadow:
+          -2px -2px 0 var(--frame-paper),
+          0 -2px 0 var(--frame-paper),
+          2px -2px 0 var(--frame-paper),
+          -2px 0 0 var(--frame-paper),
+          2px 0 0 var(--frame-paper),
+          -2px 2px 0 var(--frame-paper),
+          0 2px 0 var(--frame-paper),
+          2px 2px 0 var(--frame-paper),
+          0 0 5px var(--frame-paper);
+      }
+
+      .credit-links {
+        /* Keep the city-to-credit gap when aligning the two credit rows inward. */
+        margin-top: calc((1.35em - 24px) / 2);
+        display: grid;
+        gap: 1px;
+        max-width: calc(var(--frame-width, 420px) - 32px);
+        color: var(--art-text);
+        font-size: 8px;
+        line-height: 1.35;
+        letter-spacing: 0;
+      }
+
+      .city-credit a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        color: var(--art-text);
+        text-decoration: none;
+      }
+
+      .credit-links > span:first-child a {
+        align-items: flex-end;
+      }
+
+      .credit-links > span:last-child a {
+        align-items: flex-start;
+      }
+
+      .repository-credit {
+        white-space: nowrap;
+      }
+
+      .repository-credit a {
+        gap: 3px;
+      }
+
+      .repository-credit svg {
+        width: 10px;
+        height: 10px;
+        flex: none;
+        fill: currentColor;
+      }
+
+      .repository-credit a:hover {
+        text-decoration: underline;
+      }
+
+      .repository-credit a:focus-visible {
+        outline: 1px solid currentColor;
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+
+      .detail-marker-pane {
+        width: 100%;
+        height: 100%;
+        z-index: 660 !important;
+        clip-path: inset(
+          var(--render-clip-top, 0)
+          var(--render-clip-right, 0)
+          var(--render-clip-bottom, 0)
+          var(--render-clip-left, 0)
+        );
+        pointer-events: none;
+      }
+
+      .monument-dot {
+        position: relative;
+        display: block;
+        width: 20px;
+        height: 20px;
+        color: var(--detail-monument-color);
+        border: 1.8px solid currentColor;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--detail-monument-color) 16%, transparent);
+        box-shadow:
+          0 0 0 3px color-mix(in srgb, var(--frame-paper) 92%, transparent),
+          0 0 0 5px color-mix(in srgb, var(--detail-monument-color) 46%, transparent);
+        opacity: 0.98;
+      }
+
+      .monument-dot::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border: 1.4px solid currentColor;
+        background: color-mix(in srgb, var(--detail-monument-color) 46%, transparent);
+        border-radius: inherit;
+      }
+
+      .monument-overlay-marker {
+        position: absolute;
+        z-index: 690;
+        width: 20px;
+        height: 20px;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+
+      .composition-frame:not([data-ready]), .frame-paper:not([data-ready]) { visibility: hidden; }
+
+      .composition-frame {
+        position: absolute;
+        z-index: 650;
+        left: var(--frame-left, 420px);
+        top: var(--frame-top, 42px);
+        width: var(--frame-width, 420px);
+        height: var(--frame-height, 420px);
+        border: 1.5px solid color-mix(in srgb, var(--art-text) 48%, transparent);
+        pointer-events: none;
+      }
+
+      .composition-frame-grid::before,
+      .composition-frame-grid::after {
+        content: "";
+        position: absolute;
+        inset: 33.333% 0 auto;
+        border-top: 1px solid rgba(26, 26, 26, 0.16);
+      }
+
+      .composition-frame-grid::after {
+        inset: 66.666% 0 auto;
+      }
+
+      .composition-frame-grid {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, transparent calc(33.333% - 0.5px), rgba(26, 26, 26, 0.16) calc(33.333% - 0.5px) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
+          linear-gradient(90deg, transparent calc(66.666% - 0.5px), rgba(26, 26, 26, 0.16) calc(66.666% - 0.5px) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+      }
+
+      .map-hint {
+        position: fixed;
+        right: 28px;
+        bottom: 22px;
+        z-index: 690;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 13px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--panel-solid);
+        color: var(--muted);
+        font-size: 12px;
+        box-shadow: none;
+        backdrop-filter: blur(10px);
+      }
+
+      .leaflet-control-zoom a {
+        background: rgba(247, 242, 232, 0.92);
+        color: var(--ink);
+      }
+
+      .leaflet-control-container {
+        display: none;
+      }
+
+      @media (max-width: 760px) {
+        :root {
+          --sidebar-width: min(380px, 100vw);
+          --topbar-height: 62px;
+        }
+
+        .app-topbar {
+          grid-template-columns: 1fr auto;
+        }
+
+        .brand {
+          border-right: 0;
+        }
+
+        .brand-subtitle,
+        .status {
+          display: none;
+        }
+
+        .panel-toggle {
+          display: inline-flex;
+          align-items: center;
+          min-height: 40px;
+        }
+
+        .topbar-status {
+          padding-right: 10px;
+        }
+
+        .panel {
+          top: var(--topbar-height);
+          width: var(--sidebar-width);
+          max-height: calc(100dvh - var(--topbar-height));
+          transform: translateX(-100%);
+          visibility: hidden;
+          transition: transform 180ms ease;
+        }
+
+        body.panel-open .panel {
+          transform: translateX(0);
+          visibility: visible;
+        }
+
+        .map-hint {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="map" aria-label="City road map"></main>
+    <div class="frame-paper" id="framePaper" aria-hidden="true"></div>
+    <header class="app-topbar">
+      <div class="brand" aria-label="Carta Studio">
+        <a class="brand-mark" href="https://example.com/" target="_blank" rel="noopener noreferrer" aria-label="dr: Diego Romero website">dr<span aria-hidden="true">↗</span></a>
+        <span>
+          <span class="brand-title">Carta Studio</span>
+          <span class="brand-subtitle">City prints / Diego Romero</span>
+        </span>
+      </div>
+      <div class="topbar-status">
+        <button id="panelToggleButton" class="panel-toggle" type="button" aria-controls="editorPanel" aria-expanded="false">Controls</button>
+        <div class="status" role="status">
+          <span class="status-dot" aria-hidden="true"></span>
+        <span id="statusText">Choose a city</span>
+        </div>
+        <button id="themeToggleButton" class="icon-button" type="button" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">☾</button>
+      </div>
+    </header>
+    <div class="composition-frame" id="compositionFrame">
+      <span class="composition-frame-grid" id="compositionGrid" aria-hidden="true" hidden></span>
+      <div class="city-credit">
+        <strong id="creditCityName"></strong>
+        <span class="credit-links">
+          <span>
+            <span id="roadAttribution">&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors · &copy; <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> · <a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a></span>
+            <!-- Remove hidden when the GitHub repository is public. -->
+            <span class="repository-credit" id="repositoryCredit" hidden><span aria-hidden="true"> · </span><a href="https://github.com/dromerosm/carta-maps" target="_blank" rel="noopener noreferrer" aria-label="View Carta source code on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span>Code</span></a></span>
+          </span>
+          <span><a href="https://carta.example.com/" target="_blank" rel="noopener noreferrer">carta.example.com</a></span>
+        </span>
+      </div>
+    </div>
+
+    <aside class="panel" id="editorPanel" aria-label="Map controls">
+      <div class="editor-heading"><span class="editor-eyebrow">Print editor</span><h1 id="editorCityName">Choose a city</h1><span class="editor-location" id="editorCitySource">Search OpenStreetMap for a city or town.</span></div>
+      <div class="tool-tabs" role="tablist" aria-label="Print tools">
+        <button class="tool-tab" id="tabMap" role="tab" type="button" aria-selected="true" aria-controls="toolsMap" data-tool-tab="map">Map</button>
+        <button class="tool-tab" id="tabStyle" role="tab" type="button" aria-selected="false" aria-controls="toolsStyle" data-tool-tab="style" tabindex="-1">Style</button>
+        <button class="tool-tab" id="tabLayers" role="tab" type="button" aria-selected="false" aria-controls="toolsLayers" data-tool-tab="layers" tabindex="-1">Layers</button>
+      </div>
+      <div class="tool-scroll" id="toolScroll">
+        <div class="tool-content" id="toolsMap" role="tabpanel" aria-labelledby="tabMap" tabindex="0">
+          <section class="tool-section" aria-label="Search">
+            <div class="section-heading"><h2>Find your city</h2></div>
+            <div class="search-row"><input id="citySearch" type="search" placeholder="City or town…" aria-label="City or town" autocomplete="off"><button id="searchWorldButton" type="button" aria-label="Search OpenStreetMap" disabled>Search</button></div>
+            <p class="field-help">Search cities and towns worldwide. Enter at least 2 characters, then choose a result.</p>
+            <div class="osm-result-list hidden" id="osmResultList" aria-live="polite"></div>
+            <div class="external-load-control" id="externalLoadControls" hidden>
+              <p class="field-help">Streets from OpenFreeMap</p>
+              <label>Area<select id="externalAreaSelect" aria-label="External loading area"><option value="frame" selected>Current frame</option><option value="2">2 km</option><option value="5">5 km</option><option value="10">10 km</option></select></label>
+              <label>Street detail<select id="externalRoadModeSelect" aria-label="External street detail"><option value="auto">Automatic</option><option value="major">Major roads</option><option value="all" selected>All streets</option></select></label>
+              <button id="loadExternalAreaButton" class="primary" type="button">Load streets</button>
+              <button id="cancelStreetLoadButton" type="button" hidden>Cancel loading</button>
+              <p id="streetLoadMetrics" class="field-help" aria-live="polite"></p>
+            </div>
+          </section>
+          <section class="tool-section" aria-label="Composition">
+            <div class="section-heading"><h2>Frame &amp; composition</h2></div>
+            <div class="frame-control"><span class="field-label">Aspect ratio</span><div class="frame-options" aria-label="Frame ratio"><button class="frame-button" type="button" data-frame-ratio="1:1" aria-pressed="false"><span class="frame-mini" style="--ratio:1/1" aria-hidden="true"></span>1:1</button><button class="frame-button" type="button" data-frame-ratio="5:7" aria-pressed="false"><span class="frame-mini" style="--ratio:5/7" aria-hidden="true"></span>5:7</button><button class="frame-button" type="button" data-frame-ratio="7:5" aria-pressed="false"><span class="frame-mini" style="--ratio:7/5" aria-hidden="true"></span>7:5</button><button class="frame-button active" type="button" data-frame-ratio="16:9" aria-pressed="true"><span class="frame-mini" style="--ratio:16/9" aria-hidden="true"></span>16:9</button><button class="frame-button" type="button" data-frame-ratio="9:16" aria-pressed="false"><span class="frame-mini" style="--ratio:9/16" aria-hidden="true"></span>9:16</button></div></div>
+            <div class="control-line"><div class="control-heading"><label for="fineZoomRange" class="field-label">Zoom</label><output id="fineZoomValue" class="range-value" for="fineZoomRange">5.00</output></div>
+    <button class="range-sign" type="button" data-range-target="fineZoomRange" data-range-step="-1" aria-label="Decrease zoom">−</button><input id="fineZoomRange" type="range" min="5" max="18" step="0.05" value="5"><button class="range-sign" type="button" data-range-target="fineZoomRange" data-range-step="1" aria-label="Increase zoom">+</button></div>
+            <div class="frame-actions"><button id="fitCityButton" type="button">Center map</button><label class="detail-toggle"><input id="gridToggle" type="checkbox"><span>Show grid</span></label></div>
+          </section>
+        </div>
+        <div class="tool-content" id="toolsStyle" role="tabpanel" aria-labelledby="tabStyle" tabindex="0" hidden>
+          <section class="tool-section" aria-label="Print settings"><div class="section-heading"><h2>Print size &amp; title</h2></div><div class="print-controls"><label for="printTitle">Print title</label><input id="printTitle" type="text" maxlength="100" placeholder="City name"><label for="printWidth">Print width (cm)</label><input id="printWidth" type="number" min="10" max="120" step="0.1" value="30"><span id="printSizeHint">Height follows the frame ratio.</span></div></section>
+          <section class="tool-section" aria-label="Style presets"><div class="section-heading"><h2>Paper, streets &amp; text</h2><button class="text-button" id="resetStyleButton" type="button">Reset palette</button></div><div class="preset-grid"><button class="style-preset" type="button" data-preset="classic" aria-pressed="true"><span class="palette-preview" aria-hidden="true"><i style="--swatch:#f5f4ec"></i><i style="--swatch:#20251c"></i><i style="--swatch:#20251c"></i></span><span>Classic</span></button><button class="style-preset" type="button" data-preset="blueprint" aria-pressed="false"><span class="palette-preview" aria-hidden="true"><i style="--swatch:#102d46"></i><i style="--swatch:#b8dff0"></i><i style="--swatch:#ffffff"></i></span><span>Blueprint</span></button><button class="style-preset" type="button" data-preset="ink" aria-pressed="false"><span class="palette-preview" aria-hidden="true"><i style="--swatch:#ffffff"></i><i style="--swatch:#181c20"></i><i style="--swatch:#181c20"></i></span><span>Ink</span></button><button class="style-preset" type="button" data-preset="forest" aria-pressed="false"><span class="palette-preview" aria-hidden="true"><i style="--swatch:#edf1ea"></i><i style="--swatch:#32574a"></i><i style="--swatch:#203d32"></i></span><span>Forest</span></button></div></section>
+          <section class="tool-section" aria-label="Colors"><div class="section-heading"><h2>Make it yours</h2><small id="paletteName">Classic</small></div>
+            <div class="color-row"><label class="color-control"><span>Paper</span><input id="paperColor" type="color" value="#f5f4ec" aria-label="Paper color"></label><label class="color-control"><span>City name &amp; credits</span><input id="textColor" type="color" value="#20251c" aria-label="Text color"></label></div>
+          </section>
+
+        </div>
+        <div class="tool-content" id="toolsLayers" role="tabpanel" aria-labelledby="tabLayers" tabindex="0" hidden>
+          <section class="tool-section" aria-label="Map layers">
+            <div class="section-heading"><h2>Your layers</h2><small id="layerCount">1 shown</small></div>
+            <p class="field-help">Select a layer to edit only its appearance.</p>
+            <div class="layer-list">
+              <div class="layer-row" data-layer-card="streets">
+                <div class="layer-header">
+                  <button id="streetEditButton" class="layer-edit" type="button" data-edit-layer="streets" aria-expanded="false" aria-controls="streetStyleControls" aria-label="Edit streets appearance">
+                    <svg class="layer-sample" viewBox="0 0 34 22" aria-hidden="true"><path id="streetSample" d="M2 17 L12 6 L21 14 L32 4" fill="none" stroke="#20251c" stroke-width="0.9" stroke-opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="layer-title"><strong>Streets</strong><small id="streetStyleSummary"></small></span><span class="layer-chevron" aria-hidden="true">⌄</span>
+                  </button>
+                  <span class="layer-base">Base</span>
+                </div>
+                <fieldset id="streetStyleControls" class="layer-controls" aria-label="Streets appearance" hidden>
+                  <div class="layer-edit-heading"><strong>Streets appearance</strong><button type="button" class="text-button" data-reset-layer="streets" aria-label="Reset streets appearance">Reset</button></div>
+                  <label class="layer-color" for="lineColor"><span>Color</span><code id="streetColorValue">#20251C</code><input id="lineColor" type="color" value="#20251c" aria-label="Streets color"></label>
+                  <div class="control-line"><div class="control-heading"><label for="weightRange">Line width</label><output id="weightValue" class="range-value" for="weightRange">0.9</output></div><button class="range-sign" type="button" data-range-target="weightRange" data-range-step="-1" aria-label="Decrease streets line width">−</button><input id="weightRange" type="range" min="0.1" max="8" step="0.05" value="0.9" aria-label="Streets line width"><button class="range-sign" type="button" data-range-target="weightRange" data-range-step="1" aria-label="Increase streets line width">+</button></div>
+                  <div class="control-line"><div class="control-heading"><label for="opacityRange">Opacity</label><output id="opacityValue" class="range-value" for="opacityRange">80%</output></div><button class="range-sign" type="button" data-range-target="opacityRange" data-range-step="-1" aria-label="Decrease streets opacity">−</button><input id="opacityRange" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Streets opacity"><button class="range-sign" type="button" data-range-target="opacityRange" data-range-step="1" aria-label="Increase streets opacity">+</button></div>
+                  <p id="streetVisibilityHint" class="field-help"></p>
+                  <small class="layer-data-note">Base map</small>
+                </fieldset>
+              </div>
+              <div class="layer-row" data-layer-card="coast">
+                <div class="layer-header">
+                  <button id="coastEditButton" class="layer-edit" type="button" data-edit-layer="coast" aria-expanded="false" aria-controls="coastStyleControls" aria-label="Edit coastline appearance">
+                    <svg class="layer-sample" viewBox="0 0 34 22" aria-hidden="true"><path id="coastSample" d="M2 17 L12 6 L21 14 L32 4" fill="none" stroke="#2f7188" stroke-width="1.5" stroke-opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="layer-title"><strong>Coastline</strong><small id="coastStyleSummary"></small></span><span class="layer-chevron" aria-hidden="true">⌄</span>
+                  </button>
+                  <label class="layer-visibility"><input type="checkbox" data-detail-layer="coast" aria-label="Show coastline"><span>Show</span></label>
+                </div>
+                <fieldset id="coastStyleControls" class="layer-controls" aria-label="Coastline appearance" hidden>
+                  <div class="layer-edit-heading"><strong>Coastline appearance</strong><button type="button" class="text-button" data-reset-layer="coast" aria-label="Reset coastline appearance">Reset</button></div>
+                  <label class="layer-color" for="coastColor"><span>Color</span><code id="coastColorValue">#2F7188</code><input id="coastColor" type="color" value="#2f7188" aria-label="Coastline color"></label>
+                  <div class="control-line"><div class="control-heading"><label for="coastWeightRange">Line width</label><output id="coastWeightValue" class="range-value" for="coastWeightRange">1.5</output></div><button class="range-sign" type="button" data-range-target="coastWeightRange" data-range-step="-1" aria-label="Decrease coastline line width">−</button><input id="coastWeightRange" type="range" min="0.1" max="8" step="0.05" value="1.5" aria-label="Coastline line width"><button class="range-sign" type="button" data-range-target="coastWeightRange" data-range-step="1" aria-label="Increase coastline line width">+</button></div>
+                  <div class="control-line"><div class="control-heading"><label for="coastOpacityRange">Opacity</label><output id="coastOpacityValue" class="range-value" for="coastOpacityRange">85%</output></div><button class="range-sign" type="button" data-range-target="coastOpacityRange" data-range-step="-1" aria-label="Decrease coastline opacity">−</button><input id="coastOpacityRange" type="range" min="0" max="1" step="0.01" value="0.85" aria-label="Coastline opacity"><button class="range-sign" type="button" data-range-target="coastOpacityRange" data-range-step="1" aria-label="Increase coastline opacity">+</button></div>
+                  <p id="coastVisibilityHint" class="field-help"></p>
+                  <small id="coastLayerStatus" aria-live="polite" class="layer-data-note">Sea shores and islands</small>
+                </fieldset>
+              </div>
+              <div class="layer-row" data-layer-card="forest">
+                <div class="layer-header">
+                  <button id="forestEditButton" class="layer-edit" type="button" data-edit-layer="forest" aria-expanded="false" aria-controls="forestStyleControls" aria-label="Edit forest appearance">
+                    <svg class="layer-sample" viewBox="0 0 34 22" aria-hidden="true"><path id="forestSample" d="M2 17 L12 6 L21 14 L32 4" fill="none" stroke="#3f7855" stroke-width="1.1" stroke-opacity="0.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="layer-title"><strong>Forest</strong><small id="forestStyleSummary"></small></span><span class="layer-chevron" aria-hidden="true">⌄</span>
+                  </button>
+                  <label class="layer-visibility"><input type="checkbox" data-detail-layer="forest" aria-label="Show forest"><span>Show</span></label>
+                </div>
+                <fieldset id="forestStyleControls" class="layer-controls" aria-label="Forest appearance" hidden>
+                  <div class="layer-edit-heading"><strong>Forest appearance</strong><button type="button" class="text-button" data-reset-layer="forest" aria-label="Reset forest appearance">Reset</button></div>
+                  <label class="layer-color" for="forestColor"><span>Color</span><code id="forestColorValue">#3F7855</code><input id="forestColor" type="color" value="#3f7855" aria-label="Forest color"></label>
+                  <div class="control-line"><div class="control-heading"><label for="forestWeightRange">Line width</label><output id="forestWeightValue" class="range-value" for="forestWeightRange">1.1</output></div><button class="range-sign" type="button" data-range-target="forestWeightRange" data-range-step="-1" aria-label="Decrease forest line width">−</button><input id="forestWeightRange" type="range" min="0.1" max="8" step="0.05" value="1.1" aria-label="Forest line width"><button class="range-sign" type="button" data-range-target="forestWeightRange" data-range-step="1" aria-label="Increase forest line width">+</button></div>
+                  <div class="control-line"><div class="control-heading"><label for="forestOpacityRange">Opacity</label><output id="forestOpacityValue" class="range-value" for="forestOpacityRange">65%</output></div><button class="range-sign" type="button" data-range-target="forestOpacityRange" data-range-step="-1" aria-label="Decrease forest opacity">−</button><input id="forestOpacityRange" type="range" min="0" max="1" step="0.01" value="0.65" aria-label="Forest opacity"><button class="range-sign" type="button" data-range-target="forestOpacityRange" data-range-step="1" aria-label="Increase forest opacity">+</button></div>
+                  <p id="forestVisibilityHint" class="field-help"></p>
+                  <small id="forestLayerStatus" aria-live="polite" class="layer-data-note">Woodland outlines</small>
+                </fieldset>
+              </div>
+              <div class="layer-row" data-layer-card="rivers">
+                <div class="layer-header">
+                  <button id="riverEditButton" class="layer-edit" type="button" data-edit-layer="rivers" aria-expanded="false" aria-controls="riverStyleControls" aria-label="Edit rivers appearance">
+                    <svg class="layer-sample" viewBox="0 0 34 22" aria-hidden="true"><path id="riverSample" d="M2 17 L12 6 L21 14 L32 4" fill="none" stroke="#2f7188" stroke-width="2" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="layer-title"><strong>Rivers</strong><small id="riverStyleSummary"></small></span><span class="layer-chevron" aria-hidden="true">⌄</span>
+                  </button>
+                  <label class="layer-visibility"><input type="checkbox" data-detail-layer="rivers" aria-label="Show rivers"><span>Show</span></label>
+                </div>
+                <fieldset id="riverStyleControls" class="layer-controls" aria-label="Rivers appearance" hidden>
+                  <div class="layer-edit-heading"><strong>Rivers appearance</strong><button type="button" class="text-button" data-reset-layer="rivers" aria-label="Reset rivers appearance">Reset</button></div>
+                  <label class="layer-color" for="riverColor"><span>Color</span><code id="riverColorValue">#2F7188</code><input id="riverColor" type="color" value="#2f7188" aria-label="Rivers color"></label>
+                  <div class="control-line"><div class="control-heading"><label for="riverWeightRange">Line width</label><output id="riverWeightValue" class="range-value" for="riverWeightRange">2</output></div><button class="range-sign" type="button" data-range-target="riverWeightRange" data-range-step="-1" aria-label="Decrease rivers line width">−</button><input id="riverWeightRange" type="range" min="0.1" max="8" step="0.05" value="2" aria-label="Rivers line width"><button class="range-sign" type="button" data-range-target="riverWeightRange" data-range-step="1" aria-label="Increase rivers line width">+</button></div>
+                  <div class="control-line"><div class="control-heading"><label for="riverOpacityRange">Opacity</label><output id="riverOpacityValue" class="range-value" for="riverOpacityRange">90%</output></div><button class="range-sign" type="button" data-range-target="riverOpacityRange" data-range-step="-1" aria-label="Decrease rivers opacity">−</button><input id="riverOpacityRange" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Rivers opacity"><button class="range-sign" type="button" data-range-target="riverOpacityRange" data-range-step="1" aria-label="Increase rivers opacity">+</button></div>
+                  <p id="riverVisibilityHint" class="field-help"></p>
+                  <small id="riversLayerStatus" aria-live="polite" class="layer-data-note">Rivers, streams and canals</small>
+                </fieldset>
+              </div>
+              <div class="layer-row" data-layer-card="rail">
+                <div class="layer-header">
+                  <button id="railEditButton" class="layer-edit" type="button" data-edit-layer="rail" aria-expanded="false" aria-controls="railStyleControls" aria-label="Edit rail appearance">
+                    <svg class="layer-sample" viewBox="0 0 34 22" aria-hidden="true"><path id="railSample" d="M2 17 L12 6 L21 14 L32 4" fill="none" stroke="#9b4c38" stroke-width="2" stroke-opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="layer-title"><strong>Rail</strong><small id="railStyleSummary"></small></span><span class="layer-chevron" aria-hidden="true">⌄</span>
+                  </button>
+                  <label class="layer-visibility"><input type="checkbox" data-detail-layer="rail" aria-label="Show rail"><span>Show</span></label>
+                </div>
+                <fieldset id="railStyleControls" class="layer-controls" aria-label="Rail appearance" hidden>
+                  <div class="layer-edit-heading"><strong>Rail appearance</strong><button type="button" class="text-button" data-reset-layer="rail" aria-label="Reset rail appearance">Reset</button></div>
+                  <label class="layer-color" for="railColor"><span>Color</span><code id="railColorValue">#9B4C38</code><input id="railColor" type="color" value="#9b4c38" aria-label="Rail color"></label>
+                  <div class="control-line"><div class="control-heading"><label for="railWeightRange">Line width</label><output id="railWeightValue" class="range-value" for="railWeightRange">2</output></div><button class="range-sign" type="button" data-range-target="railWeightRange" data-range-step="-1" aria-label="Decrease rail line width">−</button><input id="railWeightRange" type="range" min="0.1" max="8" step="0.05" value="2" aria-label="Rail line width"><button class="range-sign" type="button" data-range-target="railWeightRange" data-range-step="1" aria-label="Increase rail line width">+</button></div>
+                  <div class="control-line"><div class="control-heading"><label for="railOpacityRange">Opacity</label><output id="railOpacityValue" class="range-value" for="railOpacityRange">90%</output></div><button class="range-sign" type="button" data-range-target="railOpacityRange" data-range-step="-1" aria-label="Decrease rail opacity">−</button><input id="railOpacityRange" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Rail opacity"><button class="range-sign" type="button" data-range-target="railOpacityRange" data-range-step="1" aria-label="Increase rail opacity">+</button></div>
+                  <p id="railVisibilityHint" class="field-help"></p>
+                  <small id="railLayerStatus" aria-live="polite" class="layer-data-note">Railways and tram lines</small>
+                </fieldset>
+              </div>
+            </div>
+          </section>
+          <section class="tool-section" aria-label="Map data"><div class="section-heading"><h2>Map data</h2></div><div class="data-source-toggle"><span>Street source</span><div class="source-pills" aria-label="Current data source"><span id="sourceOsmBadge" class="source-pill active">OpenStreetMap</span></div></div><div class="cache-card"><span id="dataStateText">OpenStreetMap · place search</span><span id="cacheStateText" class="cache-pill">Ready</span></div><div class="meta" id="cityMeta"><span>Choose a city to load its streets.</span></div></section>
+        </div>
+      </div>
+      <footer class="export-dock" aria-label="Export"><div class="export-heading"><strong>Export your print</strong><span id="exportDimensions">Choose a city first</span></div><label class="detail-toggle"><input id="pdfCropMarksToggle" type="checkbox" checked><span>Include PDF crop marks</span></label><div class="export-actions"><button id="downloadPdfButton" class="export-button primary" type="button" aria-label="Download PDF" aria-describedby="lowResolutionHint" disabled>PDF</button><button id="downloadSvgButton" class="export-button" type="button" aria-label="Download SVG" aria-describedby="lowResolutionHint" disabled>SVG</button><button id="downloadPngButton" class="export-button" type="button" aria-label="Download PNG for social media" aria-describedby="pngExportHint" disabled>PNG</button></div><p id="lowResolutionHint" class="export-note">PDF &amp; SVG · low resolution · 1024 px</p><p id="pngExportHint" class="export-note">PNG for sharing · 2048 px · no crop marks</p><p class="export-note" id="exportNote" role="status"></p><div class="privacy-controls"><a href="./privacy">Privacy &amp; data</a><button id="clearLocalData" type="button">Clear saved data</button><a href="./LICENSE">MIT licence</a></div></footer>
+    </aside>
+    <div class="map-hint" aria-hidden="true">◉ Drag to pan · Scroll to zoom</div>
+
+    <script src="./vendor/leaflet.js" defer></script>
+    <script src="./app.js?v=1c01cb29e02c256d" defer></script>
+
+  </body>
+</html>

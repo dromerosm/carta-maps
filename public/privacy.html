@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- SEO:start -->
+    <title>Privacy &amp; Data · Carta | Diego Romero</title>
+    <link rel="canonical" href="https://carta.example.com/privacy">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta name="description" content="Learn how Carta handles city searches, map data, browser storage and exports, which providers it uses, and how to contact Diego Romero about your privacy.">
+    <meta name="author" content="Diego Romero">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="application-name" content="Carta">
+    <meta name="theme-color" content="#f5f4ec">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Privacy &amp; Data · Carta | Diego Romero">
+    <meta name="twitter:description" content="Learn how Carta handles city searches, map data, browser storage and exports, which providers it uses, and how to contact Diego Romero about your privacy.">
+    <meta name="twitter:image" content="https://carta.example.com/og-image.jpg">
+    <meta name="twitter:image:alt" content="Carta: Your city, on paper. A framed street map of Zaragoza with PDF and SVG downloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Carta">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://carta.example.com/privacy">
+    <meta property="og:title" content="Privacy &amp; Data · Carta | Diego Romero">
+    <meta property="og:description" content="Learn how Carta handles city searches, map data, browser storage and exports, which providers it uses, and how to contact Diego Romero about your privacy.">
+    <meta property="og:image" content="https://carta.example.com/og-image.jpg">
+    <meta property="og:image:secure_url" content="https://carta.example.com/og-image.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Carta: Your city, on paper. A framed street map of Zaragoza with PDF and SVG downloads.">
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","name":"Privacy & data · Carta","isPartOf":{"@id":"https://carta.example.com/#website"},"@id":"https://carta.example.com/privacy#page","url":"https://carta.example.com/privacy","description":"Learn how Carta handles city searches, map data, browser storage and exports, which providers it uses, and how to contact Diego Romero about your privacy.","inLanguage":"en","image":"https://carta.example.com/og-image.jpg","author":{"@type":"Person","name":"Diego Romero","url":"https://example.com/"}},{"@type":"WebSite","@id":"https://carta.example.com/#website","name":"Carta","url":"https://carta.example.com/","inLanguage":"en","publisher":{"@type":"Person","name":"Diego Romero","url":"https://example.com/"}}]}</script>
+    <!-- SEO:end --><meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @font-face{font-family:DM Sans;src:url('./city-roads/fonts/dm-sans-latin.woff2') format('woff2');font-display:swap}
+    *{box-sizing:border-box}body{margin:0;background:#f5f4ec;color:#20251c;font:16px/1.65 'DM Sans',sans-serif}main{max-width:800px;margin:0 auto;padding:40px 24px 80px}a{color:#556500;text-underline-offset:3px}h1{font-size:40px;line-height:1.1;margin:32px 0 12px}h2{font-size:22px;line-height:1.3;margin-top:36px}p,li{max-width:70ch}small{color:#626855}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #d5d7cb;padding:12px 8px;text-align:left;vertical-align:top}.table-scroll{overflow-x:auto}nav{display:flex;justify-content:space-between;gap:16px}
+  </style>
+</head>
+<body><main>
+<nav><a href="./">← Back to Carta</a><a href="https://example.com/">example.com ↗</a></nav>
+<h1>Privacy & data</h1>
+<p>Carta turns city maps into prints. You do not need an account. We do not add advertising, analytics, tracking cookies or device fingerprinting. Your print is assembled and exported in your browser.</p>
+<small>Last updated: 15 September 2026. This notice covers Carta at carta.example.com.</small>
+<h2>Who is responsible</h2>
+<p>Diego Romero operates Carta and is responsible for the personal data processed to provide and protect this service. You can contact him through <a href="https://www.linkedin.com/in/diegoromerosm/">his published LinkedIn profile</a>, including about privacy or your rights. LinkedIn is a separate service with its own privacy terms; do not send sensitive information in a public post.</p>
+<h2>What happens when you use Carta</h2>
+<div class="table-scroll"><table><thead><tr><th>Action</th><th>Data and purpose</th><th>Where it goes</th></tr></thead><tbody>
+<tr><td>Open the app</td><td>Your IP address, requested URL and normal connection information are needed to deliver files and protect the service.</td><td>Cloudflare hosts the app and its API.</td></tr>
+<tr><td>Search for a city</td><td>The city name and browser language are used to find matching places. Searches run only when you press Search or Enter.</td><td>Our Cloudflare Worker checks a shared cache, then asks the OpenStreetMap Foundation’s Nominatim service if needed. It does not forward your IP address, cookies or browser identifier to Nominatim.</td></tr>
+<tr><td>Load or move a map</td><td>Tile coordinates identify the displayed area. Once streets are loaded, changes to the frame automatically request the new area.</td><td>Our Worker checks Cloudflare’s tile cache and requests missing geometry from OpenFreeMap. It does not forward your IP address to that provider.</td></tr>
+<tr><td>Style or export</td><td>Colours, frame, print title and PDF/SVG/PNG content remain in your browser. Font files are served from this site.</td><td>No print files or edited titles are uploaded. Downloads are saved where your browser directs them.</td></tr>
+</tbody></table></div>
+<p>Enter place names only. Do not use the search box for personal addresses, names of people, confidential details or other sensitive information. Map coordinates can reveal which area you are interested in even though Carta does not ask for your device location.</p>
+<h2>Storage and retention</h2>
+<ul>
+<li><strong>Shared search cache:</strong> place results are stored for seven days in Cloudflare Durable Objects, under a hash of the normalized query and language. They are shared across visitors, without a user account or IP address attached. The cache is deleted by an expiry alarm. Cloudflare manages any infrastructure backups under its service terms.</li>
+<li><strong>Map cache:</strong> tile metadata is cached for one hour. Tiles from a dated OpenFreeMap release can be cached for up to one year in Cloudflare and your browser. Generic missing-tile responses are cached at Cloudflare for 30 seconds to reduce repeated provider requests; browsers are told not to store those errors. Tile cache entries contain map data, not a search history linked to you.</li>
+<li><strong>Browser storage:</strong> IndexedDB stores recent city results and street geometry. Entries are reused for up to seven days and pruned on later reads or writes; a closed browser cannot run that cleanup. The cache is limited to roughly 40 entries. The theme preference in localStorage remains until you clear it. These stores belong to your browser profile and may be accessible to someone using the same profile.</li>
+<li><strong>Abuse controls:</strong> daily hashes derived from your network IP are used for short rate counters at Cloudflare. Separate counters limit city searches, map requests and requests that need to fetch map data from the provider. People sharing a network share these allowances. The application does not attach raw IP addresses to search or map cache entries, or forward them to the map providers. Cloudflare still processes network information to deliver and secure the service.</li>
+<li><strong>Application logs:</strong> automatic invocation logs and tracing are disabled in this configuration. The application can record a generic failure code, without search text, print content or IP addresses. Cloudflare may retain separate operational or security information under its policies.</li>
+</ul>
+<p>Use <strong>Clear saved data</strong> in the editor to clear Carta’s IndexedDB cache and theme preference on this device. Your browser’s site settings can also clear its HTTP cache and other site data. Clearing the editor does not delete files you already downloaded or purge shared provider caches.</p>
+<h2>Why we process this information</h2>
+<p>We rely on legitimate interests under Article 6(1)(f) of the GDPR to deliver the city-print tool you request, keep it reliable, prevent abuse and respect provider quotas. Processing is limited to what those purposes need. If you contact us, we use the information you provide to respond and handle the request. We keep correspondence only as long as needed to resolve it and meet any applicable legal obligations.</p>
+<p>Carta’s own configuration contains no optional analytics or marketing storage. Storage serves the requested editor, remembered appearance and repeated map loads. You can use the editor when persistent browser storage is unavailable; searches and maps may need to be fetched again.</p>
+<h2>Providers and international processing</h2>
+<p>Cloudflare supplies hosting, caching, security and the shared search service. The OpenStreetMap Foundation supplies Nominatim search results. OpenFreeMap supplies map geometry. These providers may process information through infrastructure outside Spain or the European Economic Area. Their terms explain their processing, retention and applicable transfer safeguards; Carta does not promise that every request stays in the EU.</p>
+<ul>
+<li><a href="https://www.cloudflare.com/privacypolicy/">Cloudflare privacy policy</a> and <a href="https://www.cloudflare.com/cloudflare-customer-dpa/">customer data processing addendum</a>.</li>
+<li><a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap Foundation privacy policy</a> and <a href="https://operations.osmfoundation.org/policies/nominatim/">Nominatim usage policy</a>.</li>
+<li><a href="https://openfreemap.org/">OpenFreeMap service information and terms</a>.</li>
+</ul>
+<p>Attribution and other external links only take you to those sites when you follow them. Those sites have their own privacy practices.</p>
+<h2>Your rights</h2>
+<p>Where the GDPR applies, you may request access, correction, erasure, restriction, and portability where applicable, and object to processing based on legitimate interests. Contact Diego Romero using the contact route above and describe your request. We may need enough information to verify and locate the relevant data; anonymous map-cache entries may not be attributable to a particular visitor. We do not collect additional identity information just to identify cache users.</p>
+<p>You may complain to the <a href="https://www.aepd.es/derechos-y-deberes/ejerce-tus-derechos">Spanish Data Protection Agency (AEPD)</a> or your local supervisory authority. Carta does not make automated decisions with legal or similarly significant effects, and does not build advertising profiles.</p>
+<h2>Map and software licences</h2>
+<p>The original Carta code is available under the <a href="./LICENSE">MIT licence</a>. That licence does not replace the licences of map data, fonts or bundled libraries. Maps and exports credit <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, <a href="https://openmaptiles.org/">OpenMapTiles</a> and <a href="https://openfreemap.org/">OpenFreeMap</a>. Keep the attribution when sharing or printing an export. Third-party notices accompany the source repository.</p>
+<p>Maps are illustrations, not survey or navigation data. Provider coverage and availability can vary. If we change the service or its data practices, we will update this notice and its date.</p>
+</main></body></html>

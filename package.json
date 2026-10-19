@@ -34,7 +34,7 @@
     "fontkit": "2.0.4",
     "jspdf": "4.2.1",
     "leaflet": "1.9.4",
-    "miniflare": "5.20260911.1-alpha",
+    "miniflare": "5.20261012.1-beta",
     "pbf": "5.1.2",
     "polygon-clipping": "0.15.7",
     "typescript": "7.0.2",
@@ -47,9 +47,5 @@
   },
   "bugs": {
     "url": "https://github.com/dromerosm/carta-maps/issues"
-  },
-  "overrides": {
-    "undici": "7.29.1",
-    "sharp": "0.35.5"
   }
 }

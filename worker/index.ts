@@ -180,7 +180,7 @@ async function tiles(path: string, request: Request, env: Env): Promise<Response
 function secure(response: Response, request: Request): Response {
   const result = new Response(request.method === 'HEAD' ? null : response.body, response);
   const headers = result.headers;
-  headers.set('Content-Security-Policy', `default-src 'none'; script-src 'self' ${seoScriptHashes.map(hash => `'${hash}'`).join(' ')}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'`);
+  headers.set('Content-Security-Policy', `default-src 'none'; script-src 'self' ${seoScriptHashes.map(hash => `'${hash}'`).join(' ')} https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.google-analytics.com https://www.googletagmanager.com; font-src 'self' data:; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'`);
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Frame-Options', 'DENY');
   headers.set('Referrer-Policy', 'no-referrer');
@@ -201,7 +201,7 @@ export default {
         if (path === '/api/search') response = await search(request, env);
         else if (path.startsWith('/api/tiles/')) response = await tiles(path, request, env);
         else if (!['GET', 'HEAD'].includes(request.method)) response = json({ error: 'Use GET.' }, 405);
-        else if (path.includes('/.') || path.startsWith('/api/') || !/^\/(?:$|index\.html$|privacy(?:\.html)?\/?$|LICENSE$|robots\.txt$|sitemap\.xml$|og-image\.jpg$|favicon\.svg$|app\.js$|city-roads\/[^.][\w./-]+$|vendor\/[\w./-]+$)/.test(path)) response = json({ error: 'Not found.' }, 404);
+        else if (path.includes('/.') || path.startsWith('/api/') || !/^\/(?:$|index\.html$|privacy(?:\.html)?\/?$|LICENSE$|robots\.txt$|sitemap\.xml$|og-image\.jpg$|favicon\.svg$|app\.js$|analytics\.js$|city-roads\/[^.][\w./-]+$|vendor\/[\w./-]+$)/.test(path)) response = json({ error: 'Not found.' }, 404);
         else {
           url.pathname = path;
           url.search = '';

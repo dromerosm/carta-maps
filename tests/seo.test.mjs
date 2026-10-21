@@ -18,7 +18,13 @@ test('search metadata, social cards and structured data agree with public routes
     assert.equal(JSON.parse(json)['@graph'][0].url, `https://carta.example.com${canonical}`);
     assert.ok(csp.includes(`sha256-${createHash('sha256').update(json).digest('base64')}`), 'CSP must allow the exact generated JSON-LD');
     assert.ok(html.includes('https://carta.example.com/og-image.jpg'));
+    assert.ok(html.includes('<script async src="https://www.googletagmanager.com/gtag/js?id=G-B8118TCBQY"></script>'), `${file} loads gtag.js`);
+    assert.ok(html.includes('<script src="./analytics.js"></script>'), `${file} configures GA4 from a same-origin script`);
+    assert.deepEqual([...html.matchAll(/<script(?![^>]*\ssrc=)[^>]*>/g)].map(m => m[0]), ['<script type="application/ld+json">'], `${file} has no inline script besides JSON-LD`);
   }
+  const analytics = await readFile('public/analytics.js', 'utf8');
+  assert.match(analytics, /gtag\("config", "G-B8118TCBQY", \{/);
+  for (const option of ['anonymize_ip: true', 'allow_google_signals: false', 'allow_ad_personalization_signals: false']) assert.ok(analytics.includes(option), option);
   const robots = await readFile('public/robots.txt', 'utf8');
   assert.match(robots, /Disallow: \/api\//);
   assert.match(robots, /Sitemap: https:\/\/carta\.example\.com\/sitemap.xml/);

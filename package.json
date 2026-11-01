@@ -26,9 +26,9 @@
     "build:seo": "node scripts/seo.mjs"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261023.1",
+    "@cloudflare/workers-types": "5.20261029.1",
     "@mapbox/vector-tile": "3.0.0",
-    "@types/node": "26.6.5",
+    "@types/node": "26.6.6",
     "bidi-js": "1.1.0",
     "esbuild": "0.28.2",
     "fontkit": "2.0.4",

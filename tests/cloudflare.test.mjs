@@ -36,11 +36,16 @@ test('Cloudflare: security, shared search budget, cache, and fixed tile proxy', 
   let response = await request('/');
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Location'), null, 'Root hosting must not redirect to itself');
-  assert.match(response.headers.get('Content-Security-Policy'), /script-src 'self' 'sha256-/);
+  const csp = response.headers.get('Content-Security-Policy');
+  assert.match(csp, /script-src 'self' 'sha256-[^;]* https:\/\/www\.googletagmanager\.com;/);
+  assert.doesNotMatch(csp.match(/script-src[^;]*/)[0], /unsafe/, 'Scripts stay hash/allowlist based');
+  assert.match(csp, /connect-src 'self' https:\/\/\*\.google-analytics\.com https:\/\/\*\.analytics\.google\.com https:\/\/www\.googletagmanager\.com;/);
+  assert.match(csp, /img-src 'self' data: blob: https:\/\/\*\.google-analytics\.com https:\/\/www\.googletagmanager\.com;/);
+  assert.match(csp, /default-src 'none';/);
   assert.equal(response.headers.get('X-Content-Type-Options'), 'nosniff');
   assert.equal(response.headers.get('Cache-Control'), 'no-cache, no-transform');
   assert.equal(response.headers.get('Strict-Transport-Security'), 'max-age=31536000');
-  for (const path of ['/robots.txt', '/sitemap.xml', '/og-image.jpg', '/favicon.svg']) assert.equal((await request(path)).status, 200);
+  for (const path of ['/robots.txt', '/sitemap.xml', '/og-image.jpg', '/favicon.svg', '/analytics.js']) assert.equal((await request(path)).status, 200);
   for (const path of ['/.git/config', '/package.json', '/worker/index.ts', '/tests/x', '/other/']) assert.equal((await request(path)).status, 404);
   response = await request('/carta');
   assert.equal(response.status, 404, 'The old subdirectory is not served on the dedicated hostname');

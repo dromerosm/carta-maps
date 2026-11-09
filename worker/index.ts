@@ -214,6 +214,8 @@ export default {
             response.headers.set('Location', redirect.toString());
           }
           response.headers.set('Cache-Control', /\.html$|\/$|^\/privacy$/.test(path) ? 'no-cache, no-transform' : 'public, max-age=3600, must-revalidate');
+          // The licence stays public but is a stock text; keep it out of search indexes.
+          if (path === '/LICENSE') response.headers.set('X-Robots-Tag', 'noindex');
         }
       }
     } catch { console.error('carta_request_failed'); response = json({ error: 'The service is temporarily unavailable.' }, 503); }

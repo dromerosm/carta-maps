@@ -46,6 +46,8 @@ test('Cloudflare: security, shared search budget, cache, and fixed tile proxy', 
   assert.equal(response.headers.get('Cache-Control'), 'no-cache, no-transform');
   assert.equal(response.headers.get('Strict-Transport-Security'), 'max-age=31536000');
   for (const path of ['/robots.txt', '/sitemap.xml', '/og-image.jpg', '/favicon.svg', '/analytics.js']) assert.equal((await request(path)).status, 200);
+  assert.equal(response.headers.get('X-Robots-Tag'), null, 'The app page stays indexable');
+  assert.equal((await request('/LICENSE')).headers.get('X-Robots-Tag'), 'noindex');
   for (const path of ['/.git/config', '/package.json', '/worker/index.ts', '/tests/x', '/other/']) assert.equal((await request(path)).status, 404);
   response = await request('/carta');
   assert.equal(response.status, 404, 'The old subdirectory is not served on the dedicated hostname');
